@@ -10,6 +10,7 @@ var githubZip = path.join(__dirname, 'github.zip')
 var subdirZip = path.join(__dirname, 'file-in-subdir-without-subdir-entry.zip')
 var symlinkDestZip = path.join(__dirname, 'symlink-dest.zip')
 var symlinkZip = path.join(__dirname, 'symlink.zip')
+var entryErrorZip = path.join(__dirname, 'entry-error.zip')
 var brokenZip = path.join(__dirname, 'broken.zip')
 
 var relativeTarget = './cats'
@@ -170,6 +171,24 @@ test('extract broken zip', function (t) {
   mkdtemp(t, 'broken-zip', function (dirPath) {
     extract(brokenZip, {dir: dirPath}, function (err) {
       t.ok(err, 'Error: invalid central directory file header signature: 0x2014b00')
+    })
+  })
+})
+
+test('zipfile entry error is caught and optional onEntryError callback is called', function (t) {
+  t.plan(6)
+
+  mkdtemp(t, 'entry-error', function (dirPath) {
+    function onEntryError (err, zipfile) {
+      t.true(err instanceof Error, 'error is passed to onEntryError callback')
+      t.ok(zipfile, 'zipfile is passed to onEntryError callback')
+    }
+
+    extract(entryErrorZip, {dir: dirPath, onEntryError: onEntryError}, function (err) {
+      t.notOk(err, 'no error when extracting ' + entryErrorZip)
+
+      t.true(fs.existsSync(path.join(dirPath, 'valid.txt')), 'valid file created')
+      t.false(fs.existsSync(path.join(dirPath, 'test/error.txt')), 'error file not created')
     })
   })
 })

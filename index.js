@@ -33,7 +33,8 @@ module.exports = function (zipPath, opts, cb) {
       var cancelled = false
 
       zipfile.on('error', function (err) {
-        if (err) {
+        debug('zipfile error', {error: err})
+        if (!opts.onEntryError || opts.onEntryError(err, zipfile)) {
           cancelled = true
           return cb(err)
         }
