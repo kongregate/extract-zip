@@ -10,6 +10,7 @@ var githubZip = path.join(__dirname, 'github.zip')
 var subdirZip = path.join(__dirname, 'file-in-subdir-without-subdir-entry.zip')
 var symlinkDestZip = path.join(__dirname, 'symlink-dest.zip')
 var symlinkZip = path.join(__dirname, 'symlink.zip')
+var brokenZip = path.join(__dirname, 'broken.zip')
 
 var relativeTarget = './cats'
 
@@ -160,5 +161,15 @@ test('files in subdirs where the subdir does not have its own entry is extracted
 
   tempExtract(t, 'subdir-file', subdirZip, function (dirPath) {
     t.true(fs.existsSync(path.join(dirPath, 'foo', 'bar')), 'file created')
+  })
+})
+
+test('extract broken zip', function (t) {
+  t.plan(2)
+
+  mkdtemp(t, 'broken-zip', function (dirPath) {
+    extract(brokenZip, {dir: dirPath}, function (err) {
+      t.ok(err, 'Error: invalid central directory file header signature: 0x2014b00')
+    })
   })
 })
