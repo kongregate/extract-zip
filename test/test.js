@@ -32,6 +32,18 @@ function tempExtract (t, suffix, zipPath, callback) {
   })
 }
 
+function extractWithOptions (t, suffix, zipPath, options, callback) {
+  mkdtemp(t, suffix, function (dirPath) {
+    options = options || {}
+    options.dir = dirPath
+    extract(zipPath, options, function (err) {
+      t.notOk(err, 'no error when extracting ' + zipPath)
+
+      callback(dirPath)
+    })
+  })
+}
+
 function relativeExtract (callback) {
   rimraf.sync(relativeTarget)
   extract(catsZip, {dir: relativeTarget}, callback)
@@ -43,6 +55,23 @@ test('files', function (t) {
 
   tempExtract(t, 'files', catsZip, function (dirPath) {
     t.true(fs.existsSync((path.join(dirPath, 'cats', 'gJqEYBs.jpg'))), 'file created')
+  })
+})
+
+test('dry run', function (t) {
+  t.plan(3)
+
+  extractWithOptions(t, 'files', catsZip, { dryRun: true }, function (dirPath) {
+    t.false(fs.existsSync((path.join(dirPath, 'cats', 'gJqEYBs.jpg'))), 'file created')
+  })
+})
+
+test('ignore path errors', function (t) {
+  t.plan(4)
+
+  extractWithOptions(t, 'files', entryErrorZip, { ignoreInvalidPaths: true }, function (dirPath) {
+    t.true(fs.existsSync((path.join(dirPath, 'valid.txt'))), 'file created')
+    t.false(fs.existsSync('/test/error.txt'), 'file created')
   })
 })
 

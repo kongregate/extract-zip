@@ -6,6 +6,8 @@ var concat = require('concat-stream')
 var debug = require('debug')('extract-zip')
 
 module.exports = function (zipPath, opts, cb) {
+  var invalidPathRegex = /^(invalid characters in fileName: )|(absolute path: )|(invalid relative path: )/
+
   debug('creating target directory', opts.dir)
 
   if (path.isAbsolute(opts.dir) === false) {
@@ -27,17 +29,29 @@ module.exports = function (zipPath, opts, cb) {
   function openZip () {
     debug('opening', zipPath, 'with opts', opts)
 
-    yauzl.open(zipPath, {lazyEntries: true}, function (err, zipfile) {
+    yauzl.open(zipPath, {lazyEntries: true, autoClose: false}, function (err, zipfile) {
       if (err) return cb(err)
 
       var cancelled = false
+      zipfile.once('end', function () {
+        debug('zipfile end event')
+        zipfile.close()
+      })
 
       zipfile.on('error', function (err) {
         debug('zipfile error', {error: err})
-        if (!opts.onEntryError || opts.onEntryError(err, zipfile)) {
-          cancelled = true
-          return cb(err)
+
+        if (!opts.ignoreInvalidPaths || !invalidPathRegex.test(err.message)) {
+          if (!opts.onEntryError || opts.onEntryError(err, zipfile)) {
+            cancelled = true
+            zipfile.close()
+            return cb(err)
+          }
         }
+
+        debug('zipfile error ignored, reading next entry')
+        zipfile.emittedError = false
+        zipfile.readEntry()
       })
       zipfile.readEntry()
 
@@ -152,6 +166,7 @@ module.exports = function (zipPath, opts, cb) {
         // always ensure folders are created
         var destDir = dest
         if (!isDir) destDir = path.dirname(dest)
+        if (opts.dryRun) return done()
 
         debug('mkdirp', {dir: destDir})
         mkdirp(destDir, function (err) {
