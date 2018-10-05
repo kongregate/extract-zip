@@ -1,6 +1,6 @@
 var fs = require('fs')
 var path = require('path')
-var yauzl = require('yauzl')
+var yauzl = require('yauzl-mac')
 var mkdirp = require('mkdirp')
 var concat = require('concat-stream')
 var debug = require('debug')('extract-zip')
@@ -29,7 +29,15 @@ module.exports = function (zipPath, opts, cb) {
   function openZip () {
     debug('opening', zipPath, 'with opts', opts)
 
-    yauzl.open(zipPath, {lazyEntries: true, autoClose: false}, function (err, zipfile) {
+    var errorFilter = function (err) {
+      if (!err || !err.message || !opts.ignoreInvalidPaths) {
+        return true
+      }
+
+      return !invalidPathRegex.test(err.message)
+    }
+
+    yauzl.open(zipPath, {supportMacArchiveUtility: true, lazyEntries: true, autoClose: false, errorFilter: errorFilter}, function (err, zipfile) {
       if (err) return cb(err)
 
       var cancelled = false
@@ -41,7 +49,7 @@ module.exports = function (zipPath, opts, cb) {
       zipfile.on('error', function (err) {
         debug('zipfile error', {error: err})
 
-        if (!opts.ignoreInvalidPaths || !invalidPathRegex.test(err.message)) {
+        if (errorFilter(err)) {
           if (!opts.onEntryError || opts.onEntryError(err, zipfile)) {
             cancelled = true
             zipfile.close()
