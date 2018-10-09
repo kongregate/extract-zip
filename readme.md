@@ -36,7 +36,10 @@ extract(source, {dir: target}, function (err) {
 - `dir` - defaults to `process.cwd()`
 - `defaultDirMode` - integer - Directory Mode (permissions) will default to `493` (octal `0755` in integer)
 - `defaultFileMode` - integer - File Mode (permissions) will default to `420` (octal `0644` in integer)
+- `dryRun` - if set to true, entries will only be scanned but not extracted
+- `ignoreInvalidPaths` - if set to true, invalid path entries will be ignored
 - `onEntry` - function - if present, will be called with `(entry, zipfile)`, entry is every entry from the zip file forwarded from the `entry` event from yauzl. `zipfile` is the `yauzl` instance
+- `onEntryError` - function - if present, will be called with `(err, zipfile)`, err is every entry error from the zip file forwarded from the `error` event from yauzl. `zipfile` is the `yauzl` instance. Return true from this function to propagate the error.
 
 Default modes are only used if no permissions are set in the zip file.
 

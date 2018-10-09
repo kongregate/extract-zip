@@ -21,11 +21,11 @@
     "concat-stream": "1.6.2",
     "debug": "2.6.9",
     "mkdirp": "0.5.1",
-    "yauzl": "2.4.1"
+    "yauzl-mac": "kongregate/yauzl-mac#4af1e570a4a0c59945567b91799f1d98b54d54d1"
   },
   "devDependencies": {
     "rimraf": "^2.2.8",
-    "standard": "^5.2.2",
+    "standard": "^11.0.0",
     "tape": "^4.2.0",
     "temp": "^0.8.3"
   },
