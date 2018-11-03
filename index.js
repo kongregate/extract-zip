@@ -37,7 +37,13 @@ module.exports = function (zipPath, opts, cb) {
       return !invalidPathRegex.test(err.message)
     }
 
-    yauzl.open(zipPath, {supportMacArchiveUtility: true, lazyEntries: true, autoClose: false, errorFilter: errorFilter}, function (err, zipfile) {
+    yauzl.open(zipPath, {
+      supportMacArchiveUtility: opts.supportMacArchiveUtility,
+      lazyEntries: true,
+      autoClose: false,
+      errorFilter: errorFilter
+    },
+    function (err, zipfile) {
       if (err) return cb(err)
 
       var cancelled = false
