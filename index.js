@@ -228,6 +228,18 @@ module.exports = function (zipPath, opts, cb) {
                 var link = data.toString()
                 debug('creating symlink', link, dest)
                 fs.symlink(link, dest, function (err) {
+                  if (err && err.code === 'EEXIST') {
+                    return fs.unlink(dest, function (err) {
+                      if (!err) {
+                        return fs.symlink(link, dest, function (err) {
+                          if (err) cancelled = true
+                          done(err)
+                        })
+                      }
+                      cancelled = true
+                      done(err)
+                    })
+                  }
                   if (err) cancelled = true
                   done(err)
                 })

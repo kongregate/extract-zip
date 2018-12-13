@@ -90,6 +90,24 @@ test('symlinks', function (t) {
   })
 })
 
+test('overwriting symlinks', function (t) {
+  t.plan(6)
+
+  tempExtract(t, 'symlinks', symlinkZip, function (dirPath) {
+    var symlink = path.join(dirPath, 'symlink', 'foo_symlink.txt')
+
+    extract(symlinkZip, {dir: dirPath}, function (err) {
+      t.false(err)
+      t.true(fs.existsSync(symlink), 'symlink created')
+
+      fs.lstat(symlink, function (err, stats) {
+        t.same(err, null, 'symlink can be stat\'d')
+        t.ok(stats.isSymbolicLink(), 'symlink is valid')
+      })
+    })
+  })
+})
+
 test('directories', function (t) {
   t.plan(8)
 
@@ -122,11 +140,10 @@ test('verify github zip extraction worked', function (t) {
 })
 
 test('callback called once', function (t) {
-  t.plan(4)
+  t.plan(3)
 
-  tempExtract(t, 'callback', symlinkZip, function (dirPath) {
-    // this triggers an error due to symlink creation
-    extract(symlinkZip, {dir: dirPath}, function (err) {
+  mkdtemp(t, 'broken-zip', function (dirPath) {
+    extract(brokenZip, {dir: dirPath}, function (err) {
       if (err) t.ok(true, 'error passed')
 
       t.ok(true, 'callback called')
