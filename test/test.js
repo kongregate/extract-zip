@@ -6,6 +6,7 @@ var temp = require('temp').track()
 var test = require('tape')
 
 var catsZip = path.join(__dirname, 'cats.zip')
+var catsReadOnlyZip = path.join(__dirname, 'cats-readonly.zip')
 var githubZip = path.join(__dirname, 'github.zip')
 var subdirZip = path.join(__dirname, 'file-in-subdir-without-subdir-entry.zip')
 var symlinkDestZip = path.join(__dirname, 'symlink-dest.zip')
@@ -55,6 +56,17 @@ test('files', function (t) {
 
   tempExtract(t, 'files', catsZip, function (dirPath) {
     t.true(fs.existsSync((path.join(dirPath, 'cats', 'gJqEYBs.jpg'))), 'file created')
+  })
+})
+
+test('read only files', function (t) {
+  t.plan(4)
+
+  tempExtract(t, 'files', catsReadOnlyZip, function (dirPath) {
+    extract(catsReadOnlyZip, {dir: dirPath}, function (err) {
+      t.notOk(err, 'no error when extracting ' + catsReadOnlyZip)
+      t.true(fs.existsSync((path.join(dirPath, 'a-cat.png'))), 'file created')
+    })
   })
 })
 
