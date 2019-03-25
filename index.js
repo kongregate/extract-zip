@@ -208,14 +208,27 @@ module.exports = function (zipPath, opts, cb) {
             else writeStream()
 
             function writeStream () {
-              var writeStream = fs.createWriteStream(dest, {mode: procMode})
-              readStream.pipe(writeStream)
+              var outStream = fs.createWriteStream(dest, {mode: procMode})
+              readStream.pipe(outStream)
 
-              writeStream.on('finish', function () {
+              outStream.on('finish', function () {
                 done()
               })
 
-              writeStream.on('error', function (err) {
+              outStream.on('error', function (err) {
+                if (err.code === 'EACCES') {
+                  debug('EACCESS error while writing ' + dest + ' attempting to chmod and retry', {error: err})
+                  return fs.chmod(dest, '777', function (err) {
+                    if (err) {
+                      debug('chmod error', {error: err})
+                      cancelled = true
+                      return done(err)
+                    }
+
+                    writeStream()
+                  })
+                }
+
                 debug('write error', {error: err})
                 cancelled = true
                 return done(err)
